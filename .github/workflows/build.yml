@@ -3,9 +3,13 @@ name: Build
 on:
   push:
     branches: [main, master]
+    tags: ["v*"]
   pull_request:
     branches: [main, master]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -39,3 +43,12 @@ jobs:
           name: OpenOTSTray-win-x64
           path: publish/OpenOTSTray.exe
           if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release create "${{ github.ref_name }}" publish/OpenOTSTray.exe
+          --title "${{ github.ref_name }}"
+          --generate-notes
