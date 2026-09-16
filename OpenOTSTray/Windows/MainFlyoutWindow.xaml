@@ -1,0 +1,433 @@
+<Window x:Class="OpenOTSTray.Windows.MainFlyoutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Open OTS Tray"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True"
+        SizeToContent="Height" Width="380" MaxHeight="640"
+        Deactivated="Window_Deactivated"
+        PreviewMouseDown="Window_PreviewMouseDown">
+    <Window.Resources>
+        <Style x:Key="CardButtonStyle" TargetType="Button">
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#1F2937"/>
+            <Setter Property="BorderBrush" Value="#D8DAE0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#F3F4F6"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#E5E7EB"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource CardButtonStyle}">
+            <Setter Property="Foreground" Value="#B91C1C"/>
+            <Setter Property="BorderBrush" Value="#FCA5A5"/>
+        </Style>
+
+        <Style x:Key="AccentButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1D4ED8"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1E40AF"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="AccentIconButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="NaN"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+        </Style>
+
+        <Style x:Key="IconButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="14">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#F0F1F3"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DropdownItemStyle" TargetType="Button">
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#F3F4F6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TabButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#6B7280"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="4,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="White" CornerRadius="10" BorderBrush="#D8DAE0" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="20" ShadowDepth="2" Opacity="0.25" Color="Black"/>
+        </Border.Effect>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Border Grid.Row="0" BorderBrush="#EEEEF0" BorderThickness="0,0,0,1">
+                <Grid Margin="14,10,10,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Image Grid.Column="0" Source="/ots-tray.ico" Width="20" Height="20" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="Open OTS Tray" FontWeight="Bold" FontSize="13"
+                               VerticalAlignment="Center" Margin="8,0,0,0"/>
+                    <Button x:Name="GearButton" Grid.Column="2" Content="&#9881;" Style="{StaticResource IconButtonStyle}"
+                            Click="GearButton_Click"/>
+                </Grid>
+            </Border>
+
+            <!-- Body: Latest Link (history) view -->
+            <Grid x:Name="HistoryView" Grid.Row="1" Margin="14,10,14,6">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Name="EmptyHistoryText" Grid.Row="1"
+                           Text="No links generated yet. Use Generate or Quick One Time below."
+                           TextWrapping="Wrap" TextAlignment="Center" Foreground="#6B7280"
+                           Margin="10,24,10,24" Visibility="Collapsed"/>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="HistoryList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#FAFAFB" CornerRadius="8" Padding="10" Margin="0,0,0,8"
+                                        BorderBrush="#E2E4E9" BorderThickness="1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Column="0" Width="30" CornerRadius="6"
+                                                Background="#EEF2FF" Margin="0,0,10,0">
+                                            <TextBlock Text="{Binding Icon}" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding TitleLabel}" FontWeight="Bold" FontSize="13"
+                                                           VerticalAlignment="Center" Visibility="{Binding TitleDisplayVisibility}"/>
+                                                <TextBox Grid.Column="0" Text="{Binding TitleLabel, Mode=OneWay}" FontWeight="Bold" FontSize="13"
+                                                         Height="24" Padding="4,0" VerticalContentAlignment="Center"
+                                                         Visibility="{Binding TitleEditVisibility}" Tag="{Binding}"
+                                                         IsVisibleChanged="TitleEditBox_IsVisibleChanged"
+                                                         KeyDown="TitleEditBox_KeyDown" LostFocus="TitleEditBox_LostFocus"/>
+                                                <Button Grid.Column="1" Content="&#9998;" Style="{StaticResource IconButtonStyle}"
+                                                        Width="22" Height="22" FontSize="11" Margin="4,0,0,0"
+                                                        ToolTip="Rename" Tag="{Binding}" Click="EditTitle_Click"/>
+                                            </Grid>
+                                            <TextBlock Text="{Binding Subtitle}" FontSize="11" Foreground="#6B7280" Margin="0,1,0,0"/>
+                                            <WrapPanel Margin="0,6,0,0">
+                                                <Button Content="Password" Style="{StaticResource CardButtonStyle}"
+                                                        Tag="{Binding Password}" Visibility="{Binding PasswordButtonVisibility}"
+                                                        Click="CopyPassword_Click"/>
+                                                <Button Content="Link" Style="{StaticResource CardButtonStyle}"
+                                                        Tag="{Binding Link}" IsEnabled="{Binding CanCopyLink}" Click="CopyLink_Click"/>
+                                                <Button Content="Passphrase" Style="{StaticResource CardButtonStyle}"
+                                                        Tag="{Binding Passphrase}" Visibility="{Binding PassphraseButtonVisibility}"
+                                                        IsEnabled="{Binding Succeeded}" Click="CopyPassphrase_Click"/>
+                                            </WrapPanel>
+                                            <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"
+                                                       Visibility="{Binding ErrorVisibility}" Margin="0,6,0,0" FontSize="11"/>
+                                        </StackPanel>
+
+                                        <Button Grid.Column="2" Content="&#9993;" Style="{StaticResource AccentIconButtonStyle}"
+                                                ToolTip="Send Email" Tag="{Binding}"
+                                                IsEnabled="{Binding CanSendEmail}" Click="SendEmail_Click"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <StackPanel x:Name="HistoryPaginationPanel" Grid.Row="2" Orientation="Horizontal"
+                            HorizontalAlignment="Center" Margin="0,6,0,0" Visibility="Collapsed">
+                    <Button x:Name="HistoryPrevPageButton" Content="&#8592; Previous" Style="{StaticResource CardButtonStyle}"
+                            Click="HistoryPrevPage_Click"/>
+                    <TextBlock x:Name="HistoryPageIndicatorText" VerticalAlignment="Center" Margin="10,0" Text="Page 1 of 1"/>
+                    <Button x:Name="HistoryNextPageButton" Content="Next &#8594;" Style="{StaticResource CardButtonStyle}"
+                            Click="HistoryNextPage_Click"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Body: Generate (batch) view -->
+            <Grid x:Name="GenerateView" Grid.Row="1" Margin="14,10,14,6" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="How many passwords?" FontWeight="Bold" FontSize="12"/>
+                    <TextBlock Grid.Column="2" Text="TTL in days (default 7)" FontWeight="Bold" FontSize="12" TextWrapping="Wrap"/>
+                </Grid>
+                <Grid Grid.Row="1" Margin="0,4,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="GenQuantityTextBox" Grid.Column="0" Text="1"/>
+                    <TextBox x:Name="GenTtlTextBox" Grid.Column="2" Text="7"/>
+                </Grid>
+
+                <TextBlock Grid.Row="2" Text="Passphrase (optional)" FontWeight="Bold" FontSize="12"/>
+                <TextBox x:Name="GenPassphraseTextBox" Grid.Row="3" Margin="0,4,0,10"/>
+
+                <TextBlock Grid.Row="4" Text="Region" FontWeight="Bold" FontSize="12"/>
+                <ComboBox x:Name="GenRegionComboBox" Grid.Row="5" Margin="0,4,0,10"/>
+
+                <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8"
+                            Visibility="Collapsed" x:Name="GenerateLoadingPanel">
+                    <ProgressBar IsIndeterminate="True" Width="120" Height="6"/>
+                    <TextBlock x:Name="GenerateLoadingText" Text="Generating..." Margin="8,0,0,0" VerticalAlignment="Center" FontSize="11"/>
+                </StackPanel>
+                <TextBlock x:Name="GenerateErrorText" Grid.Row="6" Foreground="Red" TextWrapping="Wrap"
+                           Margin="0,0,0,8" Visibility="Collapsed" FontSize="11"/>
+
+                <Button x:Name="GenerateSubmitButton" Grid.Row="7" Content="Generate" Style="{StaticResource AccentButtonStyle}"
+                        HorizontalAlignment="Stretch" Click="GenerateSubmit_Click"/>
+            </Grid>
+
+            <!-- Body: Quick One Time view -->
+            <Grid x:Name="QuickView" Grid.Row="1" Margin="14,10,14,6" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Secret to share" FontWeight="Bold" FontSize="12"/>
+                <TextBox x:Name="QuickSecretTextBox" Grid.Row="1" Margin="0,4,0,10" Padding="10,8"
+                         VerticalContentAlignment="Top" AcceptsReturn="True" TextWrapping="Wrap"
+                         Height="90" VerticalScrollBarVisibility="Auto"/>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8"
+                            Visibility="Collapsed" x:Name="QuickLoadingPanel">
+                    <ProgressBar IsIndeterminate="True" Width="120" Height="6"/>
+                    <TextBlock Text="Generating link..." Margin="8,0,0,0" VerticalAlignment="Center" FontSize="11"/>
+                </StackPanel>
+                <TextBlock x:Name="QuickErrorText" Grid.Row="2" Foreground="Red" TextWrapping="Wrap"
+                           Margin="0,0,0,8" Visibility="Collapsed" FontSize="11"/>
+
+                <Button x:Name="QuickSubmitButton" Grid.Row="3" Content="Generate Link" Style="{StaticResource AccentButtonStyle}"
+                        HorizontalAlignment="Stretch" Click="QuickSubmit_Click"/>
+            </Grid>
+
+            <!-- Body: Settings view -->
+            <Grid x:Name="SettingsView" Grid.Row="1" Margin="14,10,14,6" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Password length" FontWeight="Bold" FontSize="12"/>
+                        <TextBox x:Name="SetPasswordLengthTextBox" Margin="0,4,0,10"/>
+
+                        <TextBlock Text="Region" FontWeight="Bold" FontSize="12"/>
+                        <ComboBox x:Name="SetRegionComboBox" Margin="0,4,0,10"/>
+
+                        <CheckBox x:Name="SetStartWithWindowsCheckBox" Content="Start with Windows" FontSize="12" Margin="0,0,0,10"/>
+
+                        <Separator Margin="0,0,0,10"/>
+
+                        <TextBlock Text="Email subject" FontWeight="Bold" FontSize="12"/>
+                        <TextBox x:Name="SetEmailSubjectTextBox" Margin="0,4,0,10"/>
+
+                        <TextBlock Text="Email body template" FontWeight="Bold" FontSize="12"/>
+                        <TextBox x:Name="SetEmailBodyTextBox" Margin="0,4,0,4" Padding="10,8"
+                                 VerticalContentAlignment="Top" AcceptsReturn="True" TextWrapping="Wrap" FontFamily="Consolas"
+                                 Height="140" VerticalScrollBarVisibility="Auto"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#6B7280" FontSize="11" Margin="0,0,0,4">
+                            Tokens: <Run FontFamily="Consolas">{{link}}</Run> (required),
+                            <Run FontFamily="Consolas">{{password}}</Run>,
+                            <Run FontFamily="Consolas">{{passphrase}}</Run> (its line is removed automatically
+                            when no passphrase was set).
+                        </TextBlock>
+                        <TextBlock TextWrapping="Wrap" Foreground="#B45309" FontSize="11" Margin="0,0,0,4" FontStyle="Italic">
+                            Security note: adding <Run FontFamily="Consolas">{{passphrase}}</Run> puts the link and its
+                            unlock passphrase in the same message. If that message is intercepted, both are exposed
+                            together — defeating the point of a separate passphrase. Share it over a different channel
+                            instead whenever possible.
+                        </TextBlock>
+                        <Button Content="Reset to default template" Style="{StaticResource CardButtonStyle}"
+                                HorizontalAlignment="Left" Margin="0,4,0,10" Click="ResetTemplate_Click"/>
+
+                        <Separator Margin="0,0,0,10"/>
+
+                        <TextBlock Text="Danger zone" FontWeight="Bold" FontSize="12" Foreground="#B91C1C" Margin="0,0,0,6"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#6B7280" FontSize="11" Margin="0,0,0,8">
+                            Permanently deletes the saved link history (titles, status, and links) from this
+                            computer. Passwords and passphrases are never stored, so this only affects what
+                            shows up in "Latest Link".
+                        </TextBlock>
+                        <Button Content="Clear saved link history" Style="{StaticResource DangerButtonStyle}"
+                                HorizontalAlignment="Left" Margin="0,0,0,10" Click="ClearHistory_Click"/>
+
+                        <TextBlock x:Name="SettingsErrorText" Foreground="Red" TextWrapping="Wrap" Visibility="Collapsed" FontSize="11"/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <Grid Grid.Row="1" Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Content="Cancel" Style="{StaticResource CardButtonStyle}" Click="SettingsCancel_Click"/>
+                    <Button Grid.Column="2" Content="Save" Style="{StaticResource AccentButtonStyle}" Click="SettingsSave_Click"/>
+                </Grid>
+            </Grid>
+
+            <!-- Footer tab bar -->
+            <Border Grid.Row="2" BorderBrush="#EEEEF0" BorderThickness="0,1,0,0">
+                <UniformGrid Rows="1" Columns="3" Margin="6">
+                    <Button x:Name="QuickTabButton" Content="Quick One Time" Style="{StaticResource TabButtonStyle}" Click="ShowQuickView_Click"/>
+                    <Button x:Name="GenerateTabButton" Content="Generate" Style="{StaticResource TabButtonStyle}" Click="ShowGenerateView_Click"/>
+                    <Button x:Name="LatestTabButton" Content="Latest Link" Style="{StaticResource TabButtonStyle}" Click="ShowHistoryView_Click"/>
+                </UniformGrid>
+            </Border>
+
+            <!-- Gear dropdown overlay (declared last so it paints above everything else) -->
+            <Border x:Name="GearDropdown" Grid.Row="0" Grid.RowSpan="3" Background="White" CornerRadius="8"
+                    BorderBrush="#D8DAE0" BorderThickness="1" HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Margin="0,46,10,0" Padding="4" Width="150" Visibility="Collapsed" Panel.ZIndex="100">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="14" ShadowDepth="1" Opacity="0.2" Color="Black"/>
+                </Border.Effect>
+                <StackPanel>
+                    <Button Content="Settings" Style="{StaticResource DropdownItemStyle}" Click="SettingsMenuItem_Click"/>
+                    <Button Content="About" Style="{StaticResource DropdownItemStyle}" Click="AboutMenuItem_Click"/>
+                    <Separator Margin="4,4"/>
+                    <Button Content="Exit" Style="{StaticResource DropdownItemStyle}" Click="ExitMenuItem_Click"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

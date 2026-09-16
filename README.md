@@ -1,0 +1,68 @@
+# Open OTS Tray
+
+[![Build](https://github.com/felip3costa/openotstray/actions/workflows/build.yml/badge.svg)](https://github.com/felip3costa/openotstray/actions/workflows/build.yml)
+
+A Windows system tray app (WPF, .NET) that generates [OneTimeSecret](https://onetimesecret.com) links directly from a flyout panel near your system tray — no browser tab needed.
+
+## Disclaimer
+
+This application is an independent, open-source project that uses the official OneTimeSecret API.
+
+This is not an official OneTimeSecret application and is not affiliated with, endorsed by, or maintained by OneTimeSecret.
+
+The software is provided "as is", without warranties or guarantees of any kind. No technical support, maintenance, or assistance is provided for this application.
+
+Please use the application at your own discretion and always handle sensitive information responsibly.
+
+## Features
+
+- **Flyout UI** anchored near the tray icon (click the tray icon, left or right, to open/close it) — no separate windows to manage.
+- **Quick One Time** (default tab) — paste or type any text/secret and generate a link in one click.
+- **Generate** — create one or more random passwords at once, each with its own one-time link.
+- **Latest Link** — history of recently generated links (this session and restored from disk), with Copy Password / Copy Link / Copy Passphrase buttons and a one-click "Send Email" action. A lock icon shows whether each link has already been opened, checked automatically whenever the flyout opens.
+- **Settings** (via the gear icon) — password length, region, start-with-Windows, a customizable email template, and a "Clear saved link history" button.
+- **About** (via the gear icon) — version and disclaimer info.
+- Single instance — launching it twice just focuses the existing tray icon instead of running a second copy.
+- Zero external NuGet dependencies — only what ships with the .NET SDK (WPF, WinForms' `NotifyIcon`, `HttpClient`, `System.Text.Json`, `Microsoft.Win32.Registry`, DPAPI).
+
+## Requirements
+
+- Windows
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) to build. To just *run* the published app, only the **.NET 10 Desktop Runtime** is needed on the target machine — if it's missing, double-clicking the exe shows Windows' built-in prompt offering to install it.
+
+## Build & run (development)
+
+```bash
+cd OpenOTSTray
+dotnet build
+dotnet run
+```
+
+## Continuous integration
+
+Every push and pull request builds on a `windows-latest` GitHub Actions runner (see [`.github/workflows/build.yml`](.github/workflows/build.yml)): restore, build (Release), then `dotnet publish` a framework-dependent single-file `OpenOTSTray.exe`, uploaded as a workflow artifact you can download from the [Actions tab](https://github.com/felip3costa/openotstray/actions).
+
+This also lays the groundwork for code signing the published exe via [SignPath](https://signpath.io) (free for qualifying open-source projects), which signs artifacts produced by a CI pipeline rather than local builds.
+
+## Usage
+
+1. Run `OpenOTSTray.exe`. It has no window — look for its icon in the system tray (you may need to expand the hidden icons arrow).
+2. Click the icon (left or right click both work) to open the flyout:
+   - **Quick One Time** — paste/type a secret, click "Generate Link".
+   - **Generate** — set quantity, TTL (days), optional passphrase and region, click "Generate".
+   - **Latest Link** — see and copy everything you've generated, check open/burned status, send by email.
+   - Gear icon (top right) — **Settings** and **About**.
+
+## Settings & history storage
+
+Stored per-user at `%AppData%\OpenOTSTray\`:
+
+- `settings.json` — password length, region, start-with-Windows, email template. Validated on load against safe defaults, so a corrupted or tampered file can't be used to redirect requests or send content you didn't intend.
+- `history.json` — link history metadata (title, status, region). **Passwords, passphrases, and email bodies are never written to disk.** The link itself is encrypted at rest with Windows DPAPI (tied to your Windows user account and this machine) — copying `history.json` to another PC or user account makes the encrypted links unreadable there.
+
+"Start with Windows" is implemented via the per-user Registry `Run` key (`HKCU\Software\Microsoft\Windows\CurrentVersion\Run`) — no admin rights required, and it can be toggled off from Setup at any time.
+
+## Notes
+
+- Uses the public (guest) OneTimeSecret API v2 endpoint — no account or API key required.
+- Links are single-use: once opened (or burned), they can't be viewed again.

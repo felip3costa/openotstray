@@ -1,0 +1,52 @@
+<Window x:Class="OpenOTSTray.Windows.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="About"
+        Icon="/ots-tray.ico"
+        Height="480" Width="380"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize"
+        MinHeight="360" MinWidth="320"
+        ShowInTaskbar="False">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Open OTS Tray" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+        <TextBlock x:Name="VersionText" Grid.Row="1" Text="Version 1.0.0" HorizontalAlignment="Center"
+                   Foreground="#6B7280" Margin="0,4,0,14"/>
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    This application is an independent, open-source project that uses the official OneTimeSecret API.
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    This is not an official OneTimeSecret application and is not affiliated with, endorsed by, or maintained by OneTimeSecret.
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    The software is provided “as is”, without warranties or guarantees of any kind. No technical support, maintenance, or assistance is provided for this application.
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,16">
+                    Please use the application at your own discretion and always handle sensitive information responsibly.
+                </TextBlock>
+
+                <TextBlock Text="A little reminder" FontWeight="Bold" Margin="0,0,0,6"/>
+                <TextBlock Text="Be kind." Margin="0,0,0,2"/>
+                <TextBlock Text="Be helpful." Margin="0,0,0,2"/>
+                <TextBlock Text="Share knowledge." Margin="0,0,0,2"/>
+                <TextBlock Text="Make things a little better for the next person." TextWrapping="Wrap"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="3" Text="Created by Felipe Costa" HorizontalAlignment="Center"
+                   Foreground="#6B7280" Margin="0,14,0,0"/>
+        <Button Grid.Row="4" Content="Close" Padding="14,6" HorizontalAlignment="Center"
+                Margin="0,12,0,0" Click="Close_Click" IsDefault="True" IsCancel="True"/>
+    </Grid>
+</Window>

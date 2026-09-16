@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>OpenOTSTray</RootNamespace>
+    <AssemblyName>OpenOTSTray</AssemblyName>
+    <ApplicationIcon>ots-tray.ico</ApplicationIcon>
+    <Version>1.0.0</Version>
+    <RepositoryUrl>https://github.com/felip3costa/openotstray</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/felip3costa/openotstray</PackageProjectUrl>
+    <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- UseWindowsForms adds a global "using System.Windows.Forms;" which collides
+         with WPF's System.Windows namespace (Application, MessageBox, Clipboard, Button, ...).
+         We only need WinForms for the NotifyIcon/ContextMenuStrip in App.xaml.cs, aliased explicitly there. -->
+    <Using Remove="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Embedded as a WPF resource so window title-bar icons can reference it via "/ots-tray.ico",
+         and so the tray icon can be loaded from it at runtime without shipping a second loose file. -->
+    <Resource Include="ots-tray.ico" />
+  </ItemGroup>
+
+</Project>
