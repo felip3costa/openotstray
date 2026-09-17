@@ -232,8 +232,11 @@
                                                 <Button Content="Password" Style="{StaticResource CardButtonStyle}"
                                                         Tag="{Binding Password}" Visibility="{Binding PasswordButtonVisibility}"
                                                         Click="CopyPassword_Click"/>
-                                                <Button Content="Link" Style="{StaticResource CardButtonStyle}"
-                                                        Tag="{Binding Link}" IsEnabled="{Binding CanCopyLink}" Click="CopyLink_Click"/>
+                                                <Button Style="{StaticResource CardButtonStyle}" Tag="{Binding Link}"
+                                                        IsEnabled="{Binding CanCopyLink}" Click="CopyLink_Click"
+                                                        ToolTip="{Binding LinkButtonTooltip}">
+                                                    <TextBlock Text="Link" TextDecorations="{Binding LinkTextDecoration}"/>
+                                                </Button>
                                                 <Button Content="Passphrase" Style="{StaticResource CardButtonStyle}"
                                                         Tag="{Binding Passphrase}" Visibility="{Binding PassphraseButtonVisibility}"
                                                         IsEnabled="{Binding Succeeded}" Click="CopyPassphrase_Click"/>
@@ -243,7 +246,7 @@
                                         </StackPanel>
 
                                         <Button Grid.Column="2" Content="&#9993;" Style="{StaticResource AccentIconButtonStyle}"
-                                                ToolTip="Send Email" Tag="{Binding}"
+                                                ToolTip="{Binding SendEmailButtonTooltip}" Tag="{Binding}"
                                                 IsEnabled="{Binding CanSendEmail}" Click="SendEmail_Click"/>
                                     </Grid>
                                 </Border>
@@ -272,10 +275,25 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0">
+                <Border Grid.Row="0" Background="#F3F4F6" CornerRadius="8" Padding="10" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Using defaults from Settings" FontWeight="Bold" FontSize="11" Foreground="#6B7280"/>
+                            <TextBlock x:Name="GenDefaultsText" Text="Password length: 16 &#183; Region: eu"
+                                       FontSize="12" Margin="0,3,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="Edit" Style="{StaticResource CardButtonStyle}"
+                                Margin="0" VerticalAlignment="Center" Click="GenEditDefaults_Click"/>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="10"/>
@@ -284,7 +302,7 @@
                     <TextBlock Grid.Column="0" Text="How many passwords?" FontWeight="Bold" FontSize="12"/>
                     <TextBlock Grid.Column="2" Text="TTL in days (default 7)" FontWeight="Bold" FontSize="12" TextWrapping="Wrap"/>
                 </Grid>
-                <Grid Grid.Row="1" Margin="0,4,0,10">
+                <Grid Grid.Row="2" Margin="0,4,0,10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="10"/>
@@ -294,21 +312,18 @@
                     <TextBox x:Name="GenTtlTextBox" Grid.Column="2" Text="7"/>
                 </Grid>
 
-                <TextBlock Grid.Row="2" Text="Passphrase (optional)" FontWeight="Bold" FontSize="12"/>
-                <TextBox x:Name="GenPassphraseTextBox" Grid.Row="3" Margin="0,4,0,10"/>
+                <TextBlock Grid.Row="3" Text="Passphrase (optional)" FontWeight="Bold" FontSize="12"/>
+                <TextBox x:Name="GenPassphraseTextBox" Grid.Row="4" Margin="0,4,0,10"/>
 
-                <TextBlock Grid.Row="4" Text="Region" FontWeight="Bold" FontSize="12"/>
-                <ComboBox x:Name="GenRegionComboBox" Grid.Row="5" Margin="0,4,0,10"/>
-
-                <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8"
+                <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8"
                             Visibility="Collapsed" x:Name="GenerateLoadingPanel">
                     <ProgressBar IsIndeterminate="True" Width="120" Height="6"/>
                     <TextBlock x:Name="GenerateLoadingText" Text="Generating..." Margin="8,0,0,0" VerticalAlignment="Center" FontSize="11"/>
                 </StackPanel>
-                <TextBlock x:Name="GenerateErrorText" Grid.Row="6" Foreground="Red" TextWrapping="Wrap"
+                <TextBlock x:Name="GenerateErrorText" Grid.Row="5" Foreground="Red" TextWrapping="Wrap"
                            Margin="0,0,0,8" Visibility="Collapsed" FontSize="11"/>
 
-                <Button x:Name="GenerateSubmitButton" Grid.Row="7" Content="Generate" Style="{StaticResource AccentButtonStyle}"
+                <Button x:Name="GenerateSubmitButton" Grid.Row="6" Content="Generate" Style="{StaticResource AccentButtonStyle}"
                         HorizontalAlignment="Stretch" Click="GenerateSubmit_Click"/>
             </Grid>
 

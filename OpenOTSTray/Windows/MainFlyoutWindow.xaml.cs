@@ -36,7 +36,6 @@ public partial class MainFlyoutWindow : Window
         _settings = settingsService.Load();
 
         HistoryList.ItemsSource = _historyPage;
-        GenRegionComboBox.ItemsSource = AppSettings.SupportedRegions;
         SetRegionComboBox.ItemsSource = AppSettings.SupportedRegions;
 
         LoadPersistedHistory();
@@ -204,7 +203,7 @@ public partial class MainFlyoutWindow : Window
                 ShowHistoryPage(_historyCurrentPage);
                 break;
             case ViewMode.Generate:
-                GenRegionComboBox.SelectedItem = _settings.Region;
+                GenDefaultsText.Text = $"Password length: {_settings.PasswordLength} · Region: {_settings.Region}";
                 GenerateErrorText.Visibility = Visibility.Collapsed;
                 break;
             case ViewMode.Quick:
@@ -449,12 +448,7 @@ public partial class MainFlyoutWindow : Window
             return;
         }
         var ttl = ttlDays * 86400;
-
-        if (GenRegionComboBox.SelectedItem is not string region)
-        {
-            ShowGenerateError("Please select a region.");
-            return;
-        }
+        var region = _settings.Region;
 
         var passphrase = string.IsNullOrWhiteSpace(GenPassphraseTextBox.Text) ? null : GenPassphraseTextBox.Text;
 
@@ -506,6 +500,8 @@ public partial class MainFlyoutWindow : Window
         GenerateErrorText.Text = message;
         GenerateErrorText.Visibility = Visibility.Visible;
     }
+
+    private void GenEditDefaults_Click(object sender, RoutedEventArgs e) => ShowView(ViewMode.Settings);
 
     private async void QuickSubmit_Click(object sender, RoutedEventArgs e)
     {

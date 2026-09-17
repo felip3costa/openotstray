@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Documents;
 
 namespace OpenOTSTray.Models;
 
@@ -28,6 +29,23 @@ public class PasswordResultItem
     /// machine/user, or the history file predates this field) — Password and Passphrase
     /// are never persisted at all, so those already hide via the two properties above.
     /// </summary>
-    public bool CanCopyLink => Succeeded && !string.IsNullOrEmpty(Link);
-    public bool CanSendEmail => Succeeded && !string.IsNullOrEmpty(EmailBody);
+    public bool CanCopyLink => Succeeded && !IsOpened && !string.IsNullOrEmpty(Link);
+
+    // Once opened, the link is burned - sending it by email would just be sending
+    // something that no longer works, so disable that action entirely rather than
+    // only flagging it visually like the Link button below.
+    public bool CanSendEmail => Succeeded && !IsOpened && !string.IsNullOrEmpty(EmailBody);
+    public string SendEmailButtonTooltip => IsOpened
+        ? "Already opened - nothing left to send"
+        : "Send Email";
+
+    /// <summary>
+    /// The lock icon already shows open/closed, but that's easy to miss in a scrollable
+    /// list — strike through the "Link" button's own label once opened, as a second,
+    /// harder-to-miss cue that copying it won't get anyone a working link anymore.
+    /// </summary>
+    public TextDecorationCollection? LinkTextDecoration => IsOpened ? TextDecorations.Strikethrough : null;
+    public string LinkButtonTooltip => IsOpened
+        ? "Already opened - this link no longer works"
+        : "Copy the one-time link";
 }
