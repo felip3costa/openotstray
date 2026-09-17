@@ -15,6 +15,8 @@ public class SettingsService
     private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
     private const string RunValueName = "OpenOTSTray";
 
+    public bool HasSettingsFile() => File.Exists(SettingsPath);
+
     public AppSettings Load()
     {
         try
@@ -68,13 +70,24 @@ public class SettingsService
 
     public void SetStartWithWindows(bool enable)
     {
+        var exePath = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName;
+        SetStartWithWindows(enable, exePath);
+    }
+
+    /// <summary>
+    /// Same as <see cref="SetStartWithWindows(bool)"/> but for an explicit exe path,
+    /// used right after installing to a new location — at that point the *running*
+    /// process's own path is still the old one, so Environment.ProcessPath would write
+    /// a stale entry.
+    /// </summary>
+    public void SetStartWithWindows(bool enable, string? exePath)
+    {
         using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: true);
         if (key == null)
             return;
 
         if (enable)
         {
-            var exePath = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName;
             if (!string.IsNullOrEmpty(exePath))
                 key.SetValue(RunValueName, $"\"{exePath}\"");
         }

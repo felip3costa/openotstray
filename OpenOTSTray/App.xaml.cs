@@ -14,6 +14,18 @@ public partial class App : System.Windows.Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        base.OnStartup(e);
+
+        // Checked before the single-instance mutex: if this offers to install and the
+        // user accepts, this process relaunches a copy of itself from the install
+        // location and exits — it must never hold the mutex, or the new instance would
+        // immediately see "already running" and refuse to start.
+        if (SelfInstaller.TryOfferInstall(_settingsService))
+        {
+            Shutdown();
+            return;
+        }
+
         _singleInstanceMutex = new Mutex(true, "OpenOTSTray_SingleInstance", out bool isNew);
         if (!isNew)
         {
@@ -22,8 +34,6 @@ public partial class App : System.Windows.Application
             Shutdown();
             return;
         }
-
-        base.OnStartup(e);
 
         _flyout = new MainFlyoutWindow(_settingsService);
 

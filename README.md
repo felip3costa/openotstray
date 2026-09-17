@@ -75,7 +75,13 @@ This also lays the groundwork for code signing the published exe via [SignPath](
 
 ## Installing
 
-`OpenOTSTray.exe` is portable — no installer, nothing gets written to `Program Files` or the registry just from running it. That also means it won't put itself anywhere sensible on its own, so give it a permanent home once instead of running it from wherever you happened to download it (Downloads folder, a temp extraction, etc.):
+`OpenOTSTray.exe` is portable — no installer. The first time you run it from anywhere other than its permanent home, it asks:
+
+> Open OTS Tray is running from a temporary location. Install it to your Programs folder and start it automatically with Windows? You won't need to find this file again afterward.
+
+Say **Yes** and it copies itself to `%LocalAppData%\Programs\OpenOTSTray\` (the same per-user convention VS Code uses — no admin rights needed), pins a Start Menu shortcut, turns on **Start with Windows**, and relaunches itself from the new location — all in one step. You'll never need to open a folder or remember where the file is again; it just runs.
+
+Say **No** and it keeps running from wherever it is, and won't ask again (your choice is remembered) — you can always turn on **Start with Windows** later from **Settings** (gear icon) if you change your mind, or move the exe yourself:
 
 ```powershell
 $installDir = "$env:LocalAppData\Programs\OpenOTSTray"
@@ -83,20 +89,7 @@ New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 Move-Item -Path ".\OpenOTSTray.exe" -Destination $installDir -Force
 ```
 
-`%LocalAppData%\Programs\` is the same convention apps like VS Code use for a per-user install that doesn't need admin rights — it won't clutter the Desktop, and it won't get swept up if you ever clean out Downloads.
-
-Then run it from there once, open **Settings** (gear icon) and turn on **Start with Windows**. Since this is a background tray app, that's the only "shortcut" that actually matters day to day — after enabling it, you never need to find the file again; it's just running.
-
-(Optional) Pin a Start Menu shortcut too, for the rare time you want to launch it manually:
-
-```powershell
-$shell = New-Object -ComObject WScript.Shell
-$shortcut = $shell.CreateShortcut("$env:AppData\Microsoft\Windows\Start Menu\Programs\Open OTS Tray.lnk")
-$shortcut.TargetPath = "$env:LocalAppData\Programs\OpenOTSTray\OpenOTSTray.exe"
-$shortcut.Save()
-```
-
-> If you ever move or rename the exe after enabling "Start with Windows", just open it once from its new location — the app rewrites its own startup registry entry with the current path on every launch, so it self-heals instead of leaving a dangling shortcut.
+> If you ever move or rename the exe after enabling "Start with Windows" (self-installed or not), just open it once from its new location — the app rewrites its own startup registry entry with the current path on every launch, so it self-heals instead of leaving a dangling shortcut.
 
 ## Usage
 
