@@ -30,6 +30,35 @@ Please use the application at your own discretion and always handle sensitive in
 - Windows
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) to build. To just *run* the published app, only the **.NET 10 Desktop Runtime** is needed on the target machine — if it's missing, double-clicking the exe shows Windows' built-in prompt offering to install it.
 
+That's the *only* prerequisite — the project has zero external NuGet dependencies, so `dotnet restore` doesn't pull anything beyond what the SDK already has.
+
+### Check before you build
+
+Open PowerShell and run:
+
+```powershell
+dotnet --list-sdks
+```
+
+You're good to go if a line starting with `10.` shows up (e.g. `10.0.401 [C:\Program Files\dotnet\sdk]`). If the command isn't recognized at all, or no `10.x` entry is listed, install the SDK first — see below.
+
+### Install the .NET 10 SDK
+
+**Option A — winget** (built into Windows 10 21H2+ and Windows 11):
+
+```powershell
+winget install Microsoft.DotNet.SDK.10
+```
+
+**Option B — official install script** (if winget isn't available):
+
+```powershell
+irm https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.ps1
+.\dotnet-install.ps1 -Channel 10.0 -InstallDir "$env:ProgramFiles\dotnet"
+```
+
+After installing, close and reopen your terminal, then re-run `dotnet --list-sdks` to confirm.
+
 ## Build & run (development)
 
 ```bash
