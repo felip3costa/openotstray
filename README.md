@@ -73,6 +73,31 @@ Every push and pull request builds on a `windows-latest` GitHub Actions runner (
 
 This also lays the groundwork for code signing the published exe via [SignPath](https://signpath.io) (free for qualifying open-source projects), which signs artifacts produced by a CI pipeline rather than local builds.
 
+## Installing
+
+`OpenOTSTray.exe` is portable — no installer, nothing gets written to `Program Files` or the registry just from running it. That also means it won't put itself anywhere sensible on its own, so give it a permanent home once instead of running it from wherever you happened to download it (Downloads folder, a temp extraction, etc.):
+
+```powershell
+$installDir = "$env:LocalAppData\Programs\OpenOTSTray"
+New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+Move-Item -Path ".\OpenOTSTray.exe" -Destination $installDir -Force
+```
+
+`%LocalAppData%\Programs\` is the same convention apps like VS Code use for a per-user install that doesn't need admin rights — it won't clutter the Desktop, and it won't get swept up if you ever clean out Downloads.
+
+Then run it from there once, open **Settings** (gear icon) and turn on **Start with Windows**. Since this is a background tray app, that's the only "shortcut" that actually matters day to day — after enabling it, you never need to find the file again; it's just running.
+
+(Optional) Pin a Start Menu shortcut too, for the rare time you want to launch it manually:
+
+```powershell
+$shell = New-Object -ComObject WScript.Shell
+$shortcut = $shell.CreateShortcut("$env:AppData\Microsoft\Windows\Start Menu\Programs\Open OTS Tray.lnk")
+$shortcut.TargetPath = "$env:LocalAppData\Programs\OpenOTSTray\OpenOTSTray.exe"
+$shortcut.Save()
+```
+
+> If you ever move or rename the exe after enabling "Start with Windows", just open it once from its new location — the app rewrites its own startup registry entry with the current path on every launch, so it self-heals instead of leaving a dangling shortcut.
+
 ## Usage
 
 1. Run `OpenOTSTray.exe`. It has no window — look for its icon in the system tray (you may need to expand the hidden icons arrow).

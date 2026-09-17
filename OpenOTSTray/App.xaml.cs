@@ -27,6 +27,15 @@ public partial class App : System.Windows.Application
 
         _flyout = new MainFlyoutWindow(_settingsService);
 
+        // The Run key stores an absolute path to this exe. If "Start with Windows" is on
+        // and the user later moved/renamed the exe (portable app, no installer to keep it
+        // pinned), the entry would otherwise silently point at a file that no longer
+        // exists. Re-write it with the current path on every manual launch so it heals
+        // itself the next time the user runs the app from its new location.
+        var settings = _settingsService.Load();
+        if (settings.StartWithWindows)
+            _settingsService.SetStartWithWindows(true);
+
         _notifyIcon = new WinForms.NotifyIcon
         {
             Icon = TrayIconFactory.LoadTrayIcon(),
