@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,7 +14,7 @@ namespace OpenOTSTray.Windows;
 
 public partial class MainFlyoutWindow : Window
 {
-    private enum ViewMode { History, Generate, Quick, Settings }
+    private enum ViewMode { History, Generate, Quick, Settings, Hotkey }
 
     private const int HistoryPageSize = 5;
     private const int HistoryMaxItems = 25;
@@ -140,9 +141,17 @@ public partial class MainFlyoutWindow : Window
         Top = (workingArea.Bottom / dpiY) - ActualHeight - margin;
     }
 
+    /// <summary>
+    /// Set for the instant ShowHotkeyProgress hands focus back to the source app right
+    /// after activating this window (needed so it actually paints - see ShowHotkeyProgress)
+    /// - that handoff is itself a deactivation of this window, which would otherwise hide
+    /// it again immediately, before the user ever saw it.
+    /// </summary>
+    private bool _suppressDeactivateHide;
+
     private void Window_Deactivated(object sender, EventArgs e)
     {
-        if (IsVisible)
+        if (IsVisible && !_suppressDeactivateHide)
             Hide();
     }
 
@@ -198,6 +207,7 @@ public partial class MainFlyoutWindow : Window
         GenerateView.Visibility = mode == ViewMode.Generate ? Visibility.Visible : Visibility.Collapsed;
         QuickView.Visibility = mode == ViewMode.Quick ? Visibility.Visible : Visibility.Collapsed;
         SettingsView.Visibility = mode == ViewMode.Settings ? Visibility.Visible : Visibility.Collapsed;
+        HotkeyView.Visibility = mode == ViewMode.Hotkey ? Visibility.Visible : Visibility.Collapsed;
 
         SetActiveTab(mode);
 
@@ -277,6 +287,79 @@ public partial class MainFlyoutWindow : Window
         if (IsVisible && HistoryView.Visibility == Visibility.Visible)
             ShowHistoryPage(_historyCurrentPage);
     }
+
+    private static readonly TimeSpan HotkeyResultDisplayDuration = TimeSpan.FromSeconds(2.5);
+    private static readonly SolidColorBrush HotkeySuccessBrush = new(Color.FromRgb(0x15, 0x80, 0x3D));
+    private static readonly SolidColorBrush HotkeyWarningBrush = new(Color.FromRgb(0xB4, 0x53, 0x09));
+
+    /// <summary>
+    /// Called from App.xaml.cs right as the selected-text hotkey flow starts.
+    ///
+    /// Showing this window WITHOUT activating it (WPF's ShowActivated = false) sounds
+    /// like the right tool - it exists precisely so a window can appear without stealing
+    /// focus - but this window uses AllowsTransparency for its rounded corners, which WPF
+    /// implements as a layered window, and layered windows shown that way didn't reliably
+    /// get their first-ever paint from testing (an app that had never shown its flyout
+    /// before pressing the hotkey would end up with a fully invisible, if positioned and
+    /// "visible", window). Activating normally avoids that rendering quirk entirely; the
+    /// SetForegroundWindow call right after hands focus straight back to whatever app the
+    /// user was in, before SelectionLinkService gets a chance to simulate anything.
+    /// _suppressDeactivateHide stops that handoff - which is itself a deactivation - from
+    /// hiding this window again before the user ever sees it.
+    /// </summary>
+    public async Task ShowHotkeyProgress()
+    {
+        ShowView(ViewMode.Hotkey);
+        HotkeyResultIcon.Visibility = Visibility.Collapsed;
+        HotkeyProgressBar.Visibility = Visibility.Visible;
+        HotkeyStatusText.Text = "Generating a one-time link from your selection...";
+
+        var sourceWindow = GetForegroundWindow();
+
+        _suppressDeactivateHide = true;
+        Show();
+        RepositionNearTray();
+        Activate();
+
+        // Give WPF's own render pipeline a full pass before handing focus back. Without
+        // this, a layered (AllowsTransparency) window shown and deactivated again right
+        // away can end up reporting itself as visible/topmost/correctly positioned at the
+        // Win32 level while never actually compositing a single pixel - genuinely
+        // invisible on screen despite "existing" by every other measure (confirmed via
+        // EnumWindows during testing: visible=true, topmost=true, right rect, but nothing
+        // ever painted).
+        await Task.Delay(50);
+
+        if (sourceWindow != IntPtr.Zero)
+            SetForegroundWindow(sourceWindow);
+        _ = Dispatcher.BeginInvoke(new Action(() => _suppressDeactivateHide = false),
+            System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+    }
+
+    /// <summary>
+    /// Called once the hotkey flow finishes (success, failure, or "nothing was selected").
+    /// Leaves the result on screen briefly, then hides - unless the user has since clicked
+    /// into the flyout and navigated to another tab, in which case it's theirs now.
+    /// </summary>
+    public async void ShowHotkeyResult(string message, bool success)
+    {
+        HotkeyProgressBar.Visibility = Visibility.Collapsed;
+        HotkeyResultIcon.Text = success ? "✓" : "⚠";
+        HotkeyResultIcon.Foreground = success ? HotkeySuccessBrush : HotkeyWarningBrush;
+        HotkeyResultIcon.Visibility = Visibility.Visible;
+        HotkeyStatusText.Text = message;
+
+        await Task.Delay(HotkeyResultDisplayDuration);
+
+        if (IsVisible && HotkeyView.Visibility == Visibility.Visible)
+            Hide();
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
 
     private void ShowHistoryPage(int page)
     {

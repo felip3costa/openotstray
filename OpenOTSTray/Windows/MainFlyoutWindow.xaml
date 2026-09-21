@@ -440,6 +440,20 @@
                 </Grid>
             </Grid>
 
+            <!-- Body: Hotkey progress/result view - shown non-activated (see ShowNonActivated
+                 in code-behind) while the selected-text hotkey flow runs, so it never steals
+                 keyboard focus from whatever app the user is actually typing in. -->
+            <Grid x:Name="HotkeyView" Grid.Row="1" Margin="14,24,14,24" Visibility="Collapsed">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="280">
+                    <TextBlock x:Name="HotkeyResultIcon" FontSize="26" HorizontalAlignment="Center"
+                               Margin="0,0,0,10" Visibility="Collapsed"/>
+                    <ProgressBar x:Name="HotkeyProgressBar" IsIndeterminate="True" Width="160" Height="6"
+                                 HorizontalAlignment="Center" Margin="0,0,0,14"/>
+                    <TextBlock x:Name="HotkeyStatusText" TextWrapping="Wrap" TextAlignment="Center"
+                               FontSize="12" Foreground="#1F2937"/>
+                </StackPanel>
+            </Grid>
+
             <!-- Footer tab bar -->
             <Border Grid.Row="2" BorderBrush="#EEEEF0" BorderThickness="0,1,0,0">
                 <UniformGrid Rows="1" Columns="3" Margin="6">

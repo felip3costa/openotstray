@@ -95,13 +95,13 @@ public partial class App : System.Windows.Application
     private async Task OnSelectionHotkeyPressed()
     {
         var settings = _settingsService.Load();
-        var item = await _selectionLinkService.RunAsync(settings, Notify);
+        var item = await _selectionLinkService.RunAsync(
+            settings,
+            onGenerating: () => _flyout?.ShowHotkeyProgress() ?? Task.CompletedTask,
+            onFinished: (message, success) => _flyout?.ShowHotkeyResult(message, success));
         if (item != null)
             _flyout?.AddExternalHistoryItem(item);
     }
-
-    private void Notify(string message, WinForms.ToolTipIcon icon) =>
-        _notifyIcon?.ShowBalloonTip(3000, "Open OTS Tray", message, icon);
 
     protected override void OnExit(ExitEventArgs e)
     {
