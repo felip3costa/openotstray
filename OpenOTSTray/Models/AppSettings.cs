@@ -1,3 +1,5 @@
+using System.Windows.Input;
+
 namespace OpenOTSTray.Models;
 
 public class AppSettings
@@ -10,6 +12,13 @@ public class AppSettings
     public const int DefaultPasswordLength = 16;
 
     public const string DefaultEmailSubject = "Your one-time secret link";
+
+    // Alt+C is rarely claimed by Windows itself or other apps, so it's a reasonable
+    // default - but ApplyHotkeySettings (App.xaml.cs) only keeps it if registering it
+    // actually succeeds on this machine; otherwise the feature starts disabled instead
+    // of silently fighting another app for the same shortcut.
+    public const ModifierKeys DefaultHotkeyModifiers = ModifierKeys.Alt;
+    public const Key DefaultHotkeyKey = Key.C;
 
     // Deliberately does NOT include {{passphrase}}: bundling the link and its unlock
     // passphrase in the same message defeats the point of having a separate passphrase.
@@ -26,4 +35,13 @@ public class AppSettings
     public bool StartWithWindows { get; set; } = false;
     public string EmailSubject { get; set; } = DefaultEmailSubject;
     public string EmailBodyTemplate { get; set; } = DefaultEmailBodyTemplate;
+
+    /// <summary>
+    /// Global shortcut for "generate a link from the selected text in whatever app has
+    /// focus, and paste it back over the selection". Stored as plain ints (rather than
+    /// the enums directly) purely for stable System.Text.Json round-tripping.
+    /// </summary>
+    public bool HotkeyEnabled { get; set; } = true;
+    public int HotkeyModifiers { get; set; } = (int)DefaultHotkeyModifiers;
+    public int HotkeyKey { get; set; } = (int)DefaultHotkeyKey;
 }

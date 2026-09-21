@@ -17,10 +17,11 @@ Please use the application at your own discretion and always handle sensitive in
 ## Features
 
 - **Flyout UI** anchored near the tray icon (click the tray icon, left or right, to open/close it) — no separate windows to manage.
+- **Selected-text hotkey** — select text in any app, press a global shortcut (`Alt+C` by default, configurable in Settings), and it's replaced in place with a one-time link. A tray notification confirms what happened, and the generated link is added to history like any other. Works by simulating Copy/Paste, so it needs the target app to support the clipboard for its selection (most do) and can't reach into windows running elevated (as Administrator) from a non-elevated instance of this app.
 - **Quick One Time** (default tab) — paste or type any text/secret and generate a link in one click.
 - **Generate** — create one or more random passwords at once, each with its own one-time link.
 - **Latest Link** — history of recently generated links (this session and restored from disk), with Copy Password / Copy Link / Copy Passphrase buttons and a one-click "Send Email" action. A lock icon shows whether each link has already been opened, checked automatically whenever the flyout opens.
-- **Settings** (via the gear icon) — password length, region, start-with-Windows, a customizable email template, and a "Clear saved link history" button.
+- **Settings** (via the gear icon) — password length, region, start-with-Windows, the selected-text hotkey, a customizable email template, and a "Clear saved link history" button.
 - **About** (via the gear icon) — version and disclaimer info.
 - Single instance — launching it twice just focuses the existing tray icon instead of running a second copy.
 - Zero external NuGet dependencies — only what ships with the .NET SDK (WPF, WinForms' `NotifyIcon`, `HttpClient`, `System.Text.Json`, `Microsoft.Win32.Registry`, DPAPI).
@@ -104,7 +105,7 @@ Move-Item -Path ".\OpenOTSTray.exe" -Destination $installDir -Force
 
 Stored per-user at `%AppData%\OpenOTSTray\`:
 
-- `settings.json` — password length, region, start-with-Windows, email template. Validated on load against safe defaults, so a corrupted or tampered file can't be used to redirect requests or send content you didn't intend.
+- `settings.json` — password length, region, start-with-Windows, hotkey, email template. Validated on load against safe defaults, so a corrupted or tampered file can't be used to redirect requests or send content you didn't intend.
 - `history.json` — link history metadata (title, status, region). **Passwords, passphrases, and email bodies are never written to disk.** The link itself is encrypted at rest with Windows DPAPI (tied to your Windows user account and this machine) — copying `history.json` to another PC or user account makes the encrypted links unreadable there.
 
 "Start with Windows" is implemented via the per-user Registry `Run` key (`HKCU\Software\Microsoft\Windows\CurrentVersion\Run`) — no admin rights required, and it can be toggled off from Setup at any time.

@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Input;
+using OpenOTSTray.Models;
 using OpenOTSTray.Services;
 using OpenOTSTray.Windows;
 using WinForms = System.Windows.Forms;
@@ -8,6 +10,8 @@ namespace OpenOTSTray;
 public partial class App : System.Windows.Application
 {
     private readonly SettingsService _settingsService = new();
+    private readonly GlobalHotkeyService _hotkeyService = new();
+    private readonly SelectionLinkService _selectionLinkService = new();
     private WinForms.NotifyIcon? _notifyIcon;
     private Mutex? _singleInstanceMutex;
     private MainFlyoutWindow? _flyout;
@@ -35,7 +39,7 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        _flyout = new MainFlyoutWindow(_settingsService);
+        _flyout = new MainFlyoutWindow(_settingsService, _hotkeyService);
 
         // The Run key stores an absolute path to this exe. If "Start with Windows" is on
         // and the user later moved/renamed the exe (portable app, no installer to keep it
@@ -58,10 +62,50 @@ public partial class App : System.Windows.Application
             if (args.Button is WinForms.MouseButtons.Left or WinForms.MouseButtons.Right)
                 _flyout.ToggleVisibility();
         };
+
+        ApplyHotkeySettings(settings);
+        _hotkeyService.HotkeyPressed += () => _ = OnSelectionHotkeyPressed();
     }
+
+    /// <summary>
+    /// Tries to (re-)register the saved hotkey at startup. If it's no longer available -
+    /// another app grabbed it, or it collides with something OS-level - the feature is
+    /// disabled once rather than nagging the user on every launch; they can pick a new
+    /// combination from Settings whenever they want it back.
+    /// </summary>
+    private void ApplyHotkeySettings(AppSettings settings)
+    {
+        if (!settings.HotkeyEnabled)
+            return;
+
+        var modifiers = (ModifierKeys)settings.HotkeyModifiers;
+        var key = (Key)settings.HotkeyKey;
+
+        if (_hotkeyService.TryRegister(modifiers, key))
+            return;
+
+        settings.HotkeyEnabled = false;
+        _settingsService.Save(settings);
+        _notifyIcon?.ShowBalloonTip(4000, "Open OTS Tray",
+            $"The default shortcut ({HotkeyFormatter.Format(modifiers, key)}) is already in use by another app. " +
+            "Set a new one from Settings if you'd like to use this feature.",
+            WinForms.ToolTipIcon.Warning);
+    }
+
+    private async Task OnSelectionHotkeyPressed()
+    {
+        var settings = _settingsService.Load();
+        var item = await _selectionLinkService.RunAsync(settings, Notify);
+        if (item != null)
+            _flyout?.AddExternalHistoryItem(item);
+    }
+
+    private void Notify(string message, WinForms.ToolTipIcon icon) =>
+        _notifyIcon?.ShowBalloonTip(3000, "Open OTS Tray", message, icon);
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _hotkeyService.Dispose();
         _notifyIcon?.Dispose();
         _singleInstanceMutex?.ReleaseMutex();
         base.OnExit(e);

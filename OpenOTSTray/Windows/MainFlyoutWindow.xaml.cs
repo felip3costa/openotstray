@@ -22,17 +22,21 @@ public partial class MainFlyoutWindow : Window
     private static readonly SolidColorBrush InactiveTabBrush = new(Color.FromRgb(0x6B, 0x72, 0x80));
 
     private readonly SettingsService _settingsService;
+    private readonly GlobalHotkeyService _hotkeyService;
     private readonly HistoryStorageService _historyStorage = new();
     private readonly OneTimeSecretClient _client = new();
     private readonly List<PasswordResultItem> _history = new();
     private readonly ObservableCollection<PasswordResultItem> _historyPage = new();
     private AppSettings _settings;
     private int _historyCurrentPage;
+    private ModifierKeys _pendingHotkeyModifiers;
+    private Key _pendingHotkeyKey;
 
-    public MainFlyoutWindow(SettingsService settingsService)
+    public MainFlyoutWindow(SettingsService settingsService, GlobalHotkeyService hotkeyService)
     {
         InitializeComponent();
         _settingsService = settingsService;
+        _hotkeyService = hotkeyService;
         _settings = settingsService.Load();
 
         HistoryList.ItemsSource = _historyPage;
@@ -216,6 +220,10 @@ public partial class MainFlyoutWindow : Window
                 SetStartWithWindowsCheckBox.IsChecked = _settings.StartWithWindows;
                 SetEmailSubjectTextBox.Text = _settings.EmailSubject;
                 SetEmailBodyTextBox.Text = _settings.EmailBodyTemplate;
+                SetHotkeyEnabledCheckBox.IsChecked = _settings.HotkeyEnabled;
+                _pendingHotkeyModifiers = (ModifierKeys)_settings.HotkeyModifiers;
+                _pendingHotkeyKey = (Key)_settings.HotkeyKey;
+                SetHotkeyTextBox.Text = HotkeyFormatter.Format(_pendingHotkeyModifiers, _pendingHotkeyKey);
                 SettingsErrorText.Visibility = Visibility.Collapsed;
                 break;
         }
@@ -256,6 +264,18 @@ public partial class MainFlyoutWindow : Window
             _history.RemoveAt(_history.Count - 1);
 
         _historyStorage.Save(_history);
+    }
+
+    /// <summary>
+    /// Entry point for history items generated outside this window's own UI flows (the
+    /// selected-text hotkey, handled in App.xaml.cs) - keeps AddToHistory/ShowHistoryPage
+    /// as the single place that mutates and persists _history.
+    /// </summary>
+    public void AddExternalHistoryItem(PasswordResultItem item)
+    {
+        AddToHistory(item);
+        if (IsVisible && HistoryView.Visibility == Visibility.Visible)
+            ShowHistoryPage(_historyCurrentPage);
     }
 
     private void ShowHistoryPage(int page)
@@ -352,7 +372,7 @@ public partial class MainFlyoutWindow : Window
         if (sender is not Button { Tag: string text } button || string.IsNullOrEmpty(text))
             return;
 
-        SetClipboardTextSecurely(text);
+        ClipboardHelper.SetTextSecurely(text);
 
         var originalContent = button.Content;
         var originalBackground = button.Background;
@@ -369,20 +389,6 @@ public partial class MainFlyoutWindow : Window
         button.Foreground = originalForeground;
 
         _ = ClearClipboardAfterDelayAsync(text);
-    }
-
-    /// <summary>
-    /// Copies text while opting out of Windows Clipboard History and Cloud Clipboard sync,
-    /// so a copied password/link/passphrase doesn't linger in Win+V history or silently
-    /// roam to the user's other devices via the Microsoft account clipboard sync.
-    /// </summary>
-    private static void SetClipboardTextSecurely(string text)
-    {
-        var data = new DataObject();
-        data.SetData(DataFormats.UnicodeText, text);
-        data.SetData("CanIncludeInClipboardHistory", false);
-        data.SetData("CanUploadToCloudClipboard", false);
-        Clipboard.SetDataObject(data, true);
     }
 
     /// <summary>
@@ -557,6 +563,43 @@ public partial class MainFlyoutWindow : Window
         return singleLine.Length <= length ? singleLine : singleLine[..length] + "…";
     }
 
+    /// <summary>
+    /// Records a new shortcut while the capture box has focus. Alt-held keys arrive as
+    /// Key.System with the real key in e.SystemKey, so that's unwrapped first. A lone
+    /// modifier keypress is ignored (waiting for the following real key); Windows'
+    /// RegisterHotKey would technically accept zero modifiers, but that would silently
+    /// steal an ordinary key from every app system-wide, so it's rejected here instead.
+    /// </summary>
+    private void HotkeyCaptureBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        e.Handled = true;
+
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        if (key is Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt
+                 or Key.LeftShift or Key.RightShift or Key.LWin or Key.RWin or Key.None)
+            return;
+
+        var modifiers = Keyboard.Modifiers;
+        if (modifiers == ModifierKeys.None)
+        {
+            ShowSettingsError("The shortcut must include at least one modifier key (Ctrl, Alt, or Shift).");
+            return;
+        }
+
+        _pendingHotkeyModifiers = modifiers;
+        _pendingHotkeyKey = key;
+        SetHotkeyTextBox.Text = HotkeyFormatter.Format(modifiers, key);
+        SettingsErrorText.Visibility = Visibility.Collapsed;
+    }
+
+    private void ResetHotkey_Click(object sender, RoutedEventArgs e)
+    {
+        _pendingHotkeyModifiers = AppSettings.DefaultHotkeyModifiers;
+        _pendingHotkeyKey = AppSettings.DefaultHotkeyKey;
+        SetHotkeyTextBox.Text = HotkeyFormatter.Format(_pendingHotkeyModifiers, _pendingHotkeyKey);
+        SetHotkeyEnabledCheckBox.IsChecked = true;
+    }
+
     private void SettingsSave_Click(object sender, RoutedEventArgs e)
     {
         SettingsErrorText.Visibility = Visibility.Collapsed;
@@ -587,6 +630,22 @@ public partial class MainFlyoutWindow : Window
             return;
         }
 
+        var hotkeyEnabled = SetHotkeyEnabledCheckBox.IsChecked == true;
+        if (hotkeyEnabled)
+        {
+            if (!_hotkeyService.TryRegister(_pendingHotkeyModifiers, _pendingHotkeyKey))
+            {
+                ShowSettingsError(
+                    $"The shortcut \"{HotkeyFormatter.Format(_pendingHotkeyModifiers, _pendingHotkeyKey)}\" is " +
+                    "already in use by another application. Pick a different one.");
+                return;
+            }
+        }
+        else
+        {
+            _hotkeyService.Unregister();
+        }
+
         var updated = new AppSettings
         {
             PasswordLength = length,
@@ -594,6 +653,9 @@ public partial class MainFlyoutWindow : Window
             StartWithWindows = SetStartWithWindowsCheckBox.IsChecked == true,
             EmailSubject = SetEmailSubjectTextBox.Text.Trim(),
             EmailBodyTemplate = emailBodyTemplate,
+            HotkeyEnabled = hotkeyEnabled,
+            HotkeyModifiers = (int)_pendingHotkeyModifiers,
+            HotkeyKey = (int)_pendingHotkeyKey,
         };
 
         try

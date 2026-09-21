@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using System.Windows.Input;
 using Microsoft.Win32;
 using OpenOTSTray.Models;
 
@@ -57,6 +58,13 @@ public class SettingsService
 
         if (string.IsNullOrWhiteSpace(settings.EmailBodyTemplate) || !EmailTemplateBuilder.HasRequiredTokens(settings.EmailBodyTemplate))
             settings.EmailBodyTemplate = AppSettings.DefaultEmailBodyTemplate;
+
+        if (!Enum.IsDefined(typeof(Key), settings.HotkeyKey) || (Key)settings.HotkeyKey == Key.None)
+            settings.HotkeyKey = (int)AppSettings.DefaultHotkeyKey;
+
+        const int AllModifierFlags = (int)(ModifierKeys.Alt | ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Windows);
+        if (settings.HotkeyModifiers <= 0 || settings.HotkeyModifiers > AllModifierFlags)
+            settings.HotkeyModifiers = (int)AppSettings.DefaultHotkeyModifiers;
 
         return settings;
     }

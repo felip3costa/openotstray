@@ -372,6 +372,26 @@
 
                         <Separator Margin="0,0,0,10"/>
 
+                        <TextBlock Text="Selected-text hotkey" FontWeight="Bold" FontSize="12"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#6B7280" FontSize="11" Margin="0,3,0,8">
+                            Select text in any app, then press this shortcut to replace it with a one-time link.
+                        </TextBlock>
+                        <CheckBox x:Name="SetHotkeyEnabledCheckBox" Content="Enable selected-text hotkey" FontSize="12" Margin="0,0,0,8"/>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="SetHotkeyTextBox" Grid.Column="0" IsReadOnly="True" TextAlignment="Center"
+                                     Cursor="Hand" ToolTip="Click here, then press the key combination you want to use"
+                                     PreviewKeyDown="HotkeyCaptureBox_PreviewKeyDown"/>
+                            <Button Grid.Column="2" Content="Reset" Style="{StaticResource CardButtonStyle}" Margin="0"
+                                    Click="ResetHotkey_Click"/>
+                        </Grid>
+
+                        <Separator Margin="0,0,0,10"/>
+
                         <TextBlock Text="Email subject" FontWeight="Bold" FontSize="12"/>
                         <TextBox x:Name="SetEmailSubjectTextBox" Margin="0,4,0,10"/>
 
