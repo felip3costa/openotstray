@@ -17,7 +17,7 @@ Please use the application at your own discretion and always handle sensitive in
 ## Features
 
 - **Flyout UI** anchored near the tray icon (click the tray icon, left or right, to open/close it) — no separate windows to manage.
-- **Selected-text hotkey** — select text in any app, press a global shortcut (`Alt+C` by default, configurable in Settings), and it's replaced in place with a one-time link. A tray notification confirms what happened, and the generated link is added to history like any other. Works by simulating Copy/Paste, so it needs the target app to support the clipboard for its selection (most do) and can't reach into windows running elevated (as Administrator) from a non-elevated instance of this app.
+- **Selected-text hotkey** — select text in any app, press a global shortcut (`Ctrl+Alt+D` by default, configurable in Settings), and it's replaced in place with a one-time link. A tray notification confirms what happened, and the generated link is added to history like any other. Works by simulating Copy/Paste, so it needs the target app to support the clipboard for its selection (most do) and can't reach into windows running elevated (as Administrator) from a non-elevated instance of this app.
 - **Quick One Time** (default tab) — paste or type any text/secret and generate a link in one click.
 - **Generate** — create one or more random passwords at once, each with its own one-time link.
 - **Latest Link** — history of recently generated links (this session and restored from disk), with Copy Password / Copy Link / Copy Passphrase buttons and a one-click "Send Email" action. A lock icon shows whether each link has already been opened, checked automatically whenever the flyout opens.

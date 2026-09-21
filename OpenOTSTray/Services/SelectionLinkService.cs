@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using OpenOTSTray.Models;
 using WinForms = System.Windows.Forms;
@@ -19,9 +20,20 @@ namespace OpenOTSTray.Services;
 /// </summary>
 public class SelectionLinkService
 {
-    private static readonly TimeSpan CopyDelay = TimeSpan.FromMilliseconds(150);
-    private static readonly TimeSpan PasteDelay = TimeSpan.FromMilliseconds(200);
+    private static readonly TimeSpan ClipboardPollInterval = TimeSpan.FromMilliseconds(40);
+    private static readonly TimeSpan ClipboardWaitTimeout = TimeSpan.FromMilliseconds(600);
+    private static readonly TimeSpan PasteSettleDelay = TimeSpan.FromMilliseconds(200);
     private static readonly TimeSpan RestoreDelay = TimeSpan.FromMilliseconds(400);
+
+    [DllImport("user32.dll")]
+    private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+
+    private const uint KEYEVENTF_KEYUP = 0x0002;
+    private const byte VK_SHIFT = 0x10;
+    private const byte VK_CONTROL = 0x11;
+    private const byte VK_MENU = 0x12; // Alt
+    private const byte VK_LWIN = 0x5B;
+    private const byte VK_RWIN = 0x5C;
 
     private readonly OneTimeSecretClient _client = new();
 
@@ -36,10 +48,10 @@ public class SelectionLinkService
         notify("Generating a one-time link from your selection...", WinForms.ToolTipIcon.Info);
 
         Clipboard.Clear();
+        await ReleaseModifierKeysAsync();
         WinForms.SendKeys.SendWait("^c");
-        await Task.Delay(CopyDelay);
 
-        var selected = TryGetClipboardText();
+        var selected = await WaitForClipboardTextAsync();
         if (string.IsNullOrEmpty(selected))
         {
             RestoreClipboard(previousClipboard);
@@ -62,8 +74,9 @@ public class SelectionLinkService
             item.Subtitle = $"{settings.Region} · expires in {TtlFormatter.Format(604800)}";
 
             ClipboardHelper.SetTextSecurely(item.Link);
+            await ReleaseModifierKeysAsync();
             WinForms.SendKeys.SendWait("^v");
-            await Task.Delay(PasteDelay);
+            await Task.Delay(PasteSettleDelay);
 
             notify("Link generated and pasted over your selection.", WinForms.ToolTipIcon.Info);
         }
@@ -79,6 +92,43 @@ public class SelectionLinkService
         RestoreClipboard(previousClipboard);
 
         return item;
+    }
+
+    /// <summary>
+    /// The hotkey itself may use Shift/Alt/Win as part of its chord (e.g. Ctrl+Shift+D),
+    /// and WM_HOTKEY can fire while those keys are still physically held down - it's
+    /// common to release the letter key a beat before the modifiers. If we then inject
+    /// Ctrl+C while a real Shift is still down, the target app sees Ctrl+Shift+C instead
+    /// of Ctrl+C (in Chromium-based apps like Teams or WhatsApp Desktop, that opens
+    /// DevTools' element picker instead of copying), so nothing lands on the clipboard.
+    /// Forcing every modifier key up first guarantees the Ctrl+C/Ctrl+V we send next is
+    /// clean, regardless of what chord the user picked or how long they held it.
+    /// </summary>
+    private static async Task ReleaseModifierKeysAsync()
+    {
+        keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        keybd_event(VK_RWIN, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        await Task.Delay(30);
+    }
+
+    /// <summary>
+    /// Polls instead of a single fixed delay: fast apps (Notepad) get their result in one
+    /// pass, while heavier ones (Electron apps like Teams/WhatsApp) get up to
+    /// ClipboardWaitTimeout to actually respond to the simulated Ctrl+C.
+    /// </summary>
+    private static async Task<string?> WaitForClipboardTextAsync()
+    {
+        var deadline = DateTime.UtcNow + ClipboardWaitTimeout;
+        while (true)
+        {
+            var text = TryGetClipboardText();
+            if (!string.IsNullOrEmpty(text) || DateTime.UtcNow >= deadline)
+                return text;
+            await Task.Delay(ClipboardPollInterval);
+        }
     }
 
     private static string? TryGetClipboardText()

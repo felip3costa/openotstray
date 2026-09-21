@@ -13,12 +13,12 @@ public class AppSettings
 
     public const string DefaultEmailSubject = "Your one-time secret link";
 
-    // Alt+C is rarely claimed by Windows itself or other apps, so it's a reasonable
+    // Ctrl+Alt+D is rarely claimed by Windows itself or other apps, so it's a reasonable
     // default - but ApplyHotkeySettings (App.xaml.cs) only keeps it if registering it
     // actually succeeds on this machine; otherwise the feature starts disabled instead
     // of silently fighting another app for the same shortcut.
-    public const ModifierKeys DefaultHotkeyModifiers = ModifierKeys.Alt;
-    public const Key DefaultHotkeyKey = Key.C;
+    public const ModifierKeys DefaultHotkeyModifiers = ModifierKeys.Control | ModifierKeys.Alt;
+    public const Key DefaultHotkeyKey = Key.D;
 
     // Deliberately does NOT include {{passphrase}}: bundling the link and its unlock
     // passphrase in the same message defeats the point of having a separate passphrase.
